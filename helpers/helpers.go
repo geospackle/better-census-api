@@ -23,7 +23,7 @@ func Match(strToMatch string, matchedTo string) bool {
 	matchedTo = strings.ToUpper(matchedTo)
 	splitStr := strings.Split(strToMatch, ",")
 	for _, str := range splitStr {
-		var exp = regexp.MustCompile(str)
+		var exp = regexp.MustCompile(strings.TrimSpace(str))
 		match := exp.MatchString(matchedTo)
 		if match == false {
 			return false

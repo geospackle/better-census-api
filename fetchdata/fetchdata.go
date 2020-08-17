@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
-	"net/url"
-    "time"
+	"time"
 )
 
 var allStates [50]string = [50]string{"01", "02", "04", "05", "06", "08", "09", "10", "12", "13", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "44", "45", "46", "47", "48", "49", "50", "51", "53", "54", "55", "56"}
@@ -48,20 +48,20 @@ type groupInfo struct {
 }
 
 type groups struct {
-	Dataset     string
-	AccessURL   string
-    Groups      []map[string]string
+	Dataset   string
+	AccessURL string
+	Groups    []map[string]string
 }
 
 type AllGroups struct {
-   Groups []group
-   }
+	Groups []group
+}
 
 type group struct {
-    Description string
-    Name        string
-    Variables   string 
-}   
+	Description string
+	Name        string
+	Variables   string
+}
 
 type varProperties struct {
 	varType, label string
@@ -80,25 +80,21 @@ func makeGeoID(varNames []string, varValues []string) string {
 }
 
 func FindDataset(datasets []DatasetInfo, vintage string, searchStr string) ([]foundDatasets, error) {
-	var pickedValues []foundDatasets
+	var filtered []foundDatasets
 	errors := []error{errors.New("vintage not available"), errors.New("search term not found")}
-	if searchStr == "ACS" {
-        searchStr = "American Community Survey, ACS"
-    }
-    for i := range datasets {
-		//fmt.Printf("%v", table[i].Title)
+	for i := range datasets {
 		dataVintage := strconv.Itoa(datasets[i].C_vintage)
 		if vintage == "*" || vintage == dataVintage {
 			errors[0] = nil
 			if searchStr == "*" || helpers.Match(searchStr, datasets[i].Title) {
 				errors[1] = nil
-				pickedValues = append(
-					pickedValues, foundDatasets{i, datasets[i].C_vintage, datasets[i].Title})
+				filtered = append(
+					filtered, foundDatasets{i, datasets[i].C_vintage, datasets[i].Title})
 			}
 		}
 	}
 	err := helpers.GetError(errors)
-	return pickedValues, err
+	return filtered, err
 }
 
 func FindTable(datasets []DatasetInfo, datasetID int, searchStr string) (groups, error) {
@@ -112,17 +108,17 @@ func FindTable(datasets []DatasetInfo, datasetID int, searchStr string) (groups,
 	dataset := datasets[datasetID].Title
 	allTables := new(tables)
 	helpers.GetJSON(tableURL, allTables)
-    fmt.Println(tableURL, allTables)
+	fmt.Println(tableURL, allTables)
 	err = errors.New("search term not found")
 	for _, v := range allTables.Groups {
 		if searchStr == "*" || helpers.Match(searchStr, v.Description) {
 			err = nil
-            m := make(map[string]string)
-            m[v.Name] = v.Description
+			m := make(map[string]string)
+			m[v.Name] = v.Description
 			descr = append(descr, m)
 		}
 	}
-    out := groups{dataset, accessURL, descr}
+	out := groups{dataset, accessURL, descr}
 	return out, err
 }
 
@@ -135,12 +131,11 @@ func mapVar(slc []string, prefix string, conn string) []string {
 }
 
 func getGroups(vintage int, dataset string) *AllGroups {
-    url := fmt.Sprintf("https://api.census.gov/data/%d/acs/%s/groups.json", vintage, dataset)
-    allGroups := new(AllGroups)
-    helpers.GetJSON(url, allGroups)
-    return allGroups
+	url := fmt.Sprintf("https://api.census.gov/data/%d/acs/%s/groups.json", vintage, dataset)
+	allGroups := new(AllGroups)
+	helpers.GetJSON(url, allGroups)
+	return allGroups
 }
-
 
 func getData(key string, vintage int, dataset string, group string, variable string, geography string, state string, county string) ([]byte, int) {
 	var cenVar string
@@ -153,14 +148,14 @@ func getData(key string, vintage int, dataset string, group string, variable str
 	}
 	var myClient = &http.Client{Timeout: 10 * time.Second}
 	var URL string
-    geography = url.QueryEscape(geography)
+	geography = url.QueryEscape(geography)
 	if county == "*" {
 		//&in=tract: gives specific tracts
 		URL = fmt.Sprintf("https://api.census.gov/data/%d/acs/%s?get=%s&for=%s:*&in=state:%s&key=%s", vintage, dataset, cenVar, geography, state, key)
 	} else {
 		URL = fmt.Sprintf("https://api.census.gov/data/%d/acs/%s?get=%s&for=%s:*&in=state:%s&in=county:%s&key=%s", vintage, dataset, cenVar, geography, state, county, key)
 	}
-    r, err := myClient.Get(URL)
+	r, err := myClient.Get(URL)
 	if err != nil {
 		panic(err)
 	}
@@ -196,7 +191,7 @@ func GetTable(key string, vintage int, dataset string, group string, variable st
 	} else if len(states) > 1 {
 		county = "*"
 		for _, state := range states {
-            state = strings.TrimSpace(state)
+			state = strings.TrimSpace(state)
 			data, statusCode = getData(key, vintage, dataset, group, variable, geography, state, county)
 			target := make([][]string, len(data)) //needs to be created each time for copy
 			err := json.Unmarshal(data, &target)
@@ -211,9 +206,9 @@ func GetTable(key string, vintage int, dataset string, group string, variable st
 	} else {
 		counties := strings.Split(county, ",")
 		for _, county := range counties {
-            county = strings.TrimSpace(county)
+			county = strings.TrimSpace(county)
 			data, statusCode = getData(key, vintage, dataset, group, variable, geography, state, county)
-            target := make([][]string, len(data)) //needs to be created each time for copy
+			target := make([][]string, len(data)) //needs to be created each time for copy
 			err := json.Unmarshal(data, &target)
 			if err != nil {
 				return data, statusCode
@@ -253,16 +248,16 @@ type keyvalue map[string]interface{}
 type varDef struct {
 	VarName string `json:"name"`
 	VarType string `json:"type"`
-} 
+}
 
 type groupDef struct {
-    Code string `json:"code"`
-    Vintage int `json:"vintage"` 
-    Description string `json:"description"`
+	Code        string `json:"code"`
+	Vintage     int    `json:"vintage"`
+	Description string `json:"description"`
 }
 
 type censusData struct {
-    Group     keyvalue `json:"group"`
+	Group     keyvalue `json:"group"`
 	Variables keyvalue `json:"variables"`
 	GeoID     keyvalue `json:"geoid"`
 }
@@ -281,7 +276,7 @@ func tableToJSON(table [][]string, vintage int, dataset string, group string) []
 	withid := make(keyvalue, lRows)
 	for i := range dataslc {
 		geoid := makeGeoID(table[0], table[i+3])
-		withid[geoid] = dataslc[i] 
+		withid[geoid] = dataslc[i]
 	}
 	variables := make(keyvalue, len(vars))
 	for i, v := range vars {
@@ -290,18 +285,18 @@ func tableToJSON(table [][]string, vintage int, dataset string, group string) []
 		vName := table[1][vars[i].Index]
 		variables[vCode] = varDef{VarName: vName, VarType: vType}
 	}
-    var groupDescr string
-    allGroups := getGroups(vintage, dataset)
-    for _,v := range(allGroups.Groups) {
-        if v.Name == group {
-            groupDescr = v.Description
-        }
-    }
-    groupInfo := make(keyvalue, 1)
-    groupInfo["description"] = groupDescr
-    groupInfo["vintage"] = vintage
-    groupInfo["code"] = group
-    out := censusData{Group: groupInfo, GeoID: withid, Variables: variables}
+	var groupDescr string
+	allGroups := getGroups(vintage, dataset)
+	for _, v := range allGroups.Groups {
+		if v.Name == group {
+			groupDescr = v.Description
+		}
+	}
+	groupInfo := make(keyvalue, 1)
+	groupInfo["description"] = groupDescr
+	groupInfo["vintage"] = vintage
+	groupInfo["code"] = group
+	out := censusData{Group: groupInfo, GeoID: withid, Variables: variables}
 	res, _ := json.MarshalIndent(out, "", "    ")
 	return res
 }
