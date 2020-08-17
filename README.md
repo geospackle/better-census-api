@@ -22,16 +22,19 @@ Once you have identified a data group (i.e. table), you can either pull the whol
 
 http://better-census-api.com/gettable?vintage=2018&dataset=acs5&state=36&county=*&group=B19049&variable=001E,002E&geography=tract&key=32dd72aa5e814e89c669a4664fd31dcfc3df333d
 
-Parameter | Value | * 
-----------|-------|---
-vintage | data year | N
-dataset | acs1, acs3, acs5 | N
-state | state FIPS code(s) | Y
-county | county FIPS code(s) | Y
-group | group code | N
-variable | variable code(s) | Y
-geography | county, tract, block group | N
+
+Parameter | Value 
+----------|-------
+vintage | data year
+dataset | acs1/acs3/acs
+state | state FIPS code(s)
+county | county FIPS code(s)
+group | group code
+variable | variable code(s)
+geography | county, tract, block group
 key | your census api key
+
+Parameters that accept multiple (comma separated) values, also accept '*' for all values. 
 
 Data is currently available only for American Community Survey detailed tables. ACS1 and ACS3 data is available at county level only. Many variables are available down to block group level for ACS5.
 Calls for all of U.S. data ('state=*') may take 30 seconds or more to process.
