@@ -1,7 +1,7 @@
 # better-census-api
 ### API for easier access to U.S. Census data
 #### About the Project
-The purpose of Better Census API is to provide improved access to U.S. Census data. The API fetches data from the [official census API](https://api.census.gov),
+The purpose of Better Census API is to provide improved access to U.S. Census data. The Go application fetches data from the [official census API](https://api.census.gov),
 parses it into a properly formatted JSON response, and includes additional information about datasets and variables.
 
 #### Caveats
@@ -34,7 +34,7 @@ variable | variable code(s)
 geography | county, tract, block group
 key | your census api key
 
-Parameters that accept multiple (comma separated) values, also accept '*' for all values. 
+Parameters that accept multiple (comma separated) values, also accept an asterisk ('*') for all values. 
 
 Data is currently available only for American Community Survey detailed tables. ACS1 and ACS3 data is available at county level only. Many variables are available down to block group level for ACS5.
 Calls for all of U.S. data ('state=*') may take 30 seconds or more to process.
