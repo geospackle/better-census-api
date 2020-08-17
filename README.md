@@ -12,7 +12,7 @@ The API includes elementary search functions.
 
 The following query returns all datasets with the phrase "american community survey" in the title (note that some tables are titled with the abbreviation **'ACS'**).
 
-http://better-census-api.com/finddataset?search=american%20community%20survey,detailed%20tables&vintage=*
+http://better-census-api.com/finddataset?vintage=*&search=american%20community%20survey,detailed%20tables
 
 You will use the **Dataset_ID** in the response to search for tables within the dataset [Dataset_ID is **not static**].
 
