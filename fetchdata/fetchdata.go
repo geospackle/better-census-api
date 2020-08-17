@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
+	"net/url"
+    "time"
 )
 
 var allStates [50]string = [50]string{"01", "02", "04", "05", "06", "08", "09", "10", "12", "13", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "44", "45", "46", "47", "48", "49", "50", "51", "53", "54", "55", "56"}
@@ -48,10 +49,19 @@ type groupInfo struct {
 
 type groups struct {
 	Dataset     string
-	Access      string
-	Name        string `json:"Group"`
-	Description string
+	AccessURL   string
+    Groups      []map[string]string
 }
+
+type AllGroups struct {
+   Groups []group
+   }
+
+type group struct {
+    Description string
+    Name        string
+    Variables   string 
+}   
 
 type varProperties struct {
 	varType, label string
@@ -72,7 +82,10 @@ func makeGeoID(varNames []string, varValues []string) string {
 func FindDataset(datasets []DatasetInfo, vintage string, searchStr string) ([]foundDatasets, error) {
 	var pickedValues []foundDatasets
 	errors := []error{errors.New("vintage not available"), errors.New("search term not found")}
-	for i := range datasets {
+	if searchStr == "ACS" {
+        searchStr = "American Community Survey, ACS"
+    }
+    for i := range datasets {
 		//fmt.Printf("%v", table[i].Title)
 		dataVintage := strconv.Itoa(datasets[i].C_vintage)
 		if vintage == "*" || vintage == dataVintage {
@@ -88,25 +101,29 @@ func FindDataset(datasets []DatasetInfo, vintage string, searchStr string) ([]fo
 	return pickedValues, err
 }
 
-func FindTable(datasets []DatasetInfo, datasetID int, searchStr string) ([]groups, error) {
-	var pickedValues []groups
+func FindTable(datasets []DatasetInfo, datasetID int, searchStr string) (groups, error) {
+	var descr = make([]map[string]string, 0)
 	var err error
 	if len(datasets) < datasetID {
-		return pickedValues, errors.New("dataset ID does not exist")
+		return groups{}, errors.New("dataset ID does not exist")
 	}
 	tableURL := datasets[datasetID].C_groupsLink
 	accessURL := datasets[datasetID].Distribution[0].AccessURL
 	dataset := datasets[datasetID].Title
 	allTables := new(tables)
 	helpers.GetJSON(tableURL, allTables)
+    fmt.Println(tableURL, allTables)
 	err = errors.New("search term not found")
 	for _, v := range allTables.Groups {
 		if searchStr == "*" || helpers.Match(searchStr, v.Description) {
 			err = nil
-			pickedValues = append(pickedValues, groups{dataset, accessURL, v.Name, v.Description})
+            m := make(map[string]string)
+            m[v.Name] = v.Description
+			descr = append(descr, m)
 		}
 	}
-	return pickedValues, err
+    out := groups{dataset, accessURL, descr}
+	return out, err
 }
 
 func mapVar(slc []string, prefix string, conn string) []string {
@@ -116,6 +133,14 @@ func mapVar(slc []string, prefix string, conn string) []string {
 	}
 	return out
 }
+
+func getGroups(vintage int, dataset string) *AllGroups {
+    url := fmt.Sprintf("https://api.census.gov/data/%d/acs/%s/groups.json", vintage, dataset)
+    allGroups := new(AllGroups)
+    helpers.GetJSON(url, allGroups)
+    return allGroups
+}
+
 
 func getData(key string, vintage int, dataset string, group string, variable string, geography string, state string, county string) ([]byte, int) {
 	var cenVar string
@@ -127,14 +152,15 @@ func getData(key string, vintage int, dataset string, group string, variable str
 		cenVar = strings.Join(newVars, ",")
 	}
 	var myClient = &http.Client{Timeout: 10 * time.Second}
-	var url string
+	var URL string
+    geography = url.QueryEscape(geography)
 	if county == "*" {
 		//&in=tract: gives specific tracts
-		url = fmt.Sprintf("https://api.census.gov/data/%d/%s?get=%s&for=%s:*&in=state:%s&key=%s", vintage, dataset, cenVar, geography, state, key)
+		URL = fmt.Sprintf("https://api.census.gov/data/%d/acs/%s?get=%s&for=%s:*&in=state:%s&key=%s", vintage, dataset, cenVar, geography, state, key)
 	} else {
-		url = fmt.Sprintf("https://api.census.gov/data/%d/%s?get=%s&for=%s:*&in=state:%s&in=county:%s&key=%s", vintage, dataset, cenVar, geography, state, county, key)
+		URL = fmt.Sprintf("https://api.census.gov/data/%d/acs/%s?get=%s&for=%s:*&in=state:%s&in=county:%s&key=%s", vintage, dataset, cenVar, geography, state, county, key)
 	}
-	r, err := myClient.Get(url)
+    r, err := myClient.Get(URL)
 	if err != nil {
 		panic(err)
 	}
@@ -170,6 +196,7 @@ func GetTable(key string, vintage int, dataset string, group string, variable st
 	} else if len(states) > 1 {
 		county = "*"
 		for _, state := range states {
+            state = strings.TrimSpace(state)
 			data, statusCode = getData(key, vintage, dataset, group, variable, geography, state, county)
 			target := make([][]string, len(data)) //needs to be created each time for copy
 			err := json.Unmarshal(data, &target)
@@ -184,8 +211,9 @@ func GetTable(key string, vintage int, dataset string, group string, variable st
 	} else {
 		counties := strings.Split(county, ",")
 		for _, county := range counties {
+            county = strings.TrimSpace(county)
 			data, statusCode = getData(key, vintage, dataset, group, variable, geography, state, county)
-			target := make([][]string, len(data)) //needs to be created each time for copy
+            target := make([][]string, len(data)) //needs to be created each time for copy
 			err := json.Unmarshal(data, &target)
 			if err != nil {
 				return data, statusCode
@@ -210,7 +238,7 @@ func GetTable(key string, vintage int, dataset string, group string, variable st
 	table = append([][]string{varTypes}, table...)
 	table = append([][]string{varNames}, table...)
 	table = append([][]string{tableHeader}, table...)
-	res := tableToJSON(table)
+	res := tableToJSON(table, vintage, dataset, group)
 	return res, 200
 }
 
@@ -225,14 +253,21 @@ type keyvalue map[string]interface{}
 type varDef struct {
 	VarName string `json:"name"`
 	VarType string `json:"type"`
+} 
+
+type groupDef struct {
+    Code string `json:"code"`
+    Vintage int `json:"vintage"` 
+    Description string `json:"description"`
 }
 
 type censusData struct {
+    Group     keyvalue `json:"group"`
 	Variables keyvalue `json:"variables"`
 	GeoID     keyvalue `json:"geoid"`
 }
 
-func tableToJSON(table [][]string) []byte {
+func tableToJSON(table [][]string, vintage int, dataset string, group string) []byte {
 	lRows := len(table) - 3            //3 header rows
 	dataslc := make([]keyvalue, lRows) // or make []keyvalue and use append
 	exp := `[A-Z]+\d.+`
@@ -255,13 +290,24 @@ func tableToJSON(table [][]string) []byte {
 		vName := table[1][vars[i].Index]
 		variables[vCode] = varDef{VarName: vName, VarType: vType}
 	}
-	out := censusData{GeoID: withid, Variables: variables}
+    var groupDescr string
+    allGroups := getGroups(vintage, dataset)
+    for _,v := range(allGroups.Groups) {
+        if v.Name == group {
+            groupDescr = v.Description
+        }
+    }
+    groupInfo := make(keyvalue, 1)
+    groupInfo["description"] = groupDescr
+    groupInfo["vintage"] = vintage
+    groupInfo["code"] = group
+    out := censusData{Group: groupInfo, GeoID: withid, Variables: variables}
 	res, _ := json.MarshalIndent(out, "", "    ")
 	return res
 }
 
 func getAllVars(vintage int, dataset string, group string) interface{} {
-	url := fmt.Sprintf("https://api.census.gov/data/%d/%s/groups/%s.json", vintage, dataset, group)
+	url := fmt.Sprintf("https://api.census.gov/data/%d/acs/%s/groups/%s.json", vintage, dataset, group)
 	var target interface{}
 	allVars := helpers.GetJSON(url, target)
 	return allVars

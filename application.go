@@ -92,5 +92,6 @@ func main() {
 	router.HandleFunc("/finddataset", findCensusDataset).Queries("search", "{search}", "vintage", "{vintage}").Methods("GET")
 	router.HandleFunc("/findtable", findCensusTable).Queries("search", "{search}", "datasetid", "{datasetid}").Methods("GET")
 	router.HandleFunc("/gettable", getCensusTable).Queries("key", "{key}", "vintage", "{vintage}", "dataset", "{dataset}", "group", "{group}", "variable", "{variable}", "geography", "{geography}", "state", "{state}", "county", "{county}").Methods("GET")
+ router.PathPrefix("/.well-known/pki-validation/").Handler(http.StripPrefix("/.well-known/pki-validation/",http.FileServer(http.Dir("./static/")))).Methods("GET")
 	log.Fatal(http.ListenAndServe(":5000", handlers.CORS(headersOk, originsOk, methodsOk)(router)))
 }
