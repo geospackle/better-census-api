@@ -20,7 +20,7 @@ http://better-census-api.com/findtable?search=income,household&datasetid=[Datase
 
 Once you have identified a data group (i.e. table), you can either pull the whole group or one or more variables (i.e. columns). You will need a personal [Census API key](https://api.census.gov/data/key_signup.html).
 
-http://better-census-api.com/gettable?vintage=2018&dataset=acs5&state=36&county=*&group=B19049&variable=001E,002E&geography=tract&key=32dd72aa5e814e89c669a4664fd31dcfc3df333d
+http://better-census-api.com/gettable?vintage=2018&dataset=acs5&state=36&county=*&group=B19049&variable=001E,002E&geography=tract&key=[your_key]
 
 
 Parameter | Value 
