@@ -27,10 +27,6 @@ func getAllDatasets() *fetchdata.Datasets {
 var allDatasets = getAllDatasets()
 
 func findCensusDataset(w http.ResponseWriter, r *http.Request) {
-	//vintage, err := strconv.Atoi(mux.Vars(r)["vintage"])
-	//if err != nil {
-	//vintage = 0
-	//}
 	vintage := mux.Vars(r)["vintage"]
 	searchTerm := mux.Vars(r)["search"]
 	dataset, err := fetchdata.FindDataset(allDatasets.Dataset, vintage, searchTerm)
@@ -43,7 +39,6 @@ func findCensusDataset(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(out)
-		//fmt.Fprintf(w, string(out))
 	}
 }
 
@@ -63,7 +58,6 @@ func findCensusTable(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(out)
-		//fmt.Fprintf(w, string(out))
 	}
 }
 
@@ -80,18 +74,17 @@ func getCensusTable(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	w.Write(table)
-	//fmt.Fprintf(w, string(table))
 }
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
+    router := mux.NewRouter().StrictSlash(true)
     headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
     originsOk := handlers.AllowedOrigins([]string{"*"})
     methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-        router.HandleFunc("/", homeLink)
-	router.HandleFunc("/finddataset", findCensusDataset).Queries("search", "{search}", "vintage", "{vintage}").Methods("GET")
-	router.HandleFunc("/findtable", findCensusTable).Queries("search", "{search}", "datasetid", "{datasetid}").Methods("GET")
-	router.HandleFunc("/gettable", getCensusTable).Queries("key", "{key}", "vintage", "{vintage}", "dataset", "{dataset}", "group", "{group}", "variable", "{variable}", "geography", "{geography}", "state", "{state}", "county", "{county}").Methods("GET")
- router.PathPrefix("/.well-known/pki-validation/").Handler(http.StripPrefix("/.well-known/pki-validation/",http.FileServer(http.Dir("./static/")))).Methods("GET")
+    router.HandleFunc("/", homeLink)
+    router.HandleFunc("/finddataset", findCensusDataset).Queries("search", "{search}", "vintage", "{vintage}").Methods("GET")
+    router.HandleFunc("/findtable", findCensusTable).Queries("search", "{search}", "datasetid", "{datasetid}").Methods("GET")
+    router.HandleFunc("/gettable", getCensusTable).Queries("key", "{key}", "vintage", "{vintage}", "dataset", "{dataset}", "group", "{group}", "variable", "{variable}", "geography", "{geography}", "state", "{state}", "county", "{county}").Methods("GET")
+    router.PathPrefix("/.well-known/pki-validation/").Handler(http.StripPrefix("/.well-known/pki-validation/",http.FileServer(http.Dir("./static/")))).Methods("GET")
 	log.Fatal(http.ListenAndServe(":5000", handlers.CORS(headersOk, originsOk, methodsOk)(router)))
 }

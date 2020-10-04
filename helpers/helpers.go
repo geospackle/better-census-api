@@ -10,6 +10,18 @@ import (
 	"time"
 )
 
+type Hashmap struct {
+    Map map[string]interface{}
+	}
+
+func (e *Hashmap) StoreHash(m map[string]interface{}) {
+    (*e).Map= make(map[string]interface{})
+    for k,v := range m{
+        (*e).Map[k] = make(map[string]interface{})
+        (*e).Map[k] = v
+        }
+	}
+
 func Map(in []string, f func(string) string) []string {
 	out := make([]string, len(in))
 	for i, v := range in {
