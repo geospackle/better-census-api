@@ -26,7 +26,7 @@ http://better-census-api.com/gettable?vintage=2018&dataset=acs5&state=36&county=
 Parameter | Value 
 ----------|-------
 vintage | data year
-dataset | acs1/acs3/acs
+dataset | acs1/acs3/acs5
 state | state FIPS code(s)
 county | county FIPS code(s)
 group | group code
@@ -37,4 +37,4 @@ key | your census api key
 Parameters that accept multiple (comma separated) values, also accept an asterisk ('*') for all values. 
 
 Data is currently available only for American Community Survey detailed tables. ACS1 and ACS3 data is available at county level only. Many variables are available down to block group level for ACS5.
-Calls for all of U.S. data ('state=*') may take 30 seconds or more to process.
+Calls for complete U.S. data ('state=*') may take 30 seconds or more to process.

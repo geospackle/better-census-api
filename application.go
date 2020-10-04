@@ -55,7 +55,7 @@ func findCensusTable(w http.ResponseWriter, r *http.Request) {
 		out, err := json.MarshalIndent(table, "", "    ")
 		if err != nil {
 			panic(err)
-		}
+    	}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(out)
 	}
