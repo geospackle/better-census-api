@@ -11,15 +11,15 @@ import (
 )
 
 type Hashmap struct {
-    Map map[string]interface{}
+	Map map[string]interface{}
 	}
 
 func (e *Hashmap) StoreHash(m map[string]interface{}) {
-    (*e).Map= make(map[string]interface{})
-    for k,v := range m{
-        (*e).Map[k] = make(map[string]interface{})
-        (*e).Map[k] = v
-        }
+	(*e).Map= make(map[string]interface{})
+	for k,v := range m{
+		(*e).Map[k] = make(map[string]interface{})
+		(*e).Map[k] = v
+		}
 	}
 
 func Map(in []string, f func(string) string) []string {
@@ -52,7 +52,7 @@ func GetJSON(url string, target interface{}) interface{} {
 	}
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
-	//    return json.NewDecoder(r.Body).Decode(target)    //unsafe
+	//	return json.NewDecoder(r.Body).Decode(target)	//unsafe
 	json.Unmarshal(body, &target)
 	return target
 }
