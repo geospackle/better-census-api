@@ -13,7 +13,7 @@ import (
 )
 
 func homeLink(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Read docs: https://github.com/geospackle/better-census-api")
+	fmt.Fprintf(w, "Read docs::https://github.com/geospackle/better-census-api")
 }
 
 func getAllDatasets() *fetchdata.Datasets {
