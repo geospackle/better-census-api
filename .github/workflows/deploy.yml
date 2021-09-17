@@ -1,25 +1,22 @@
-name: Go
-
+name: Build & Deploy
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [main]
 
 jobs:
-
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.17
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...
+      - name: Deploy Go API
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{secrets.SSH_HOST}} # IP address of the server you wish to ssh into
+          key: ${{secrets.SSH_KEY}} # Private or public key of the server
+          username: ${{ secrets.SSH_UNAME }} # User of the server you want to ssh into
+     
+          script: |
+            mkdir census-api-test
+            cd census-api-test
+            git clone git@github.com:geospackle/better-census-api.git
+            docker-compose -f go-app-compose.yaml up -d --build
+            echo 'Deployment successful to digital ocean'
