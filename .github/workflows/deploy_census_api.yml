@@ -15,7 +15,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
 
      
-          script:
+          script: |
             docker stop census-api
             docker rm census-api
             docker build . -t census-api
