@@ -5,7 +5,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Go API
+      - name: Deploy Census API
         uses: appleboy/ssh-action@v0.1.2
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -13,9 +13,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
 
      
-          script: |
-            mkdir census-api-test
-            cd census-api-test
-            git clone git@github.com:geospackle/better-census-api.git
+          script:
+            mkdir census-api
+            cd census-api
+            git clone https://github.com/geospackle/better-census-api.git
             docker-compose -f go-app-compose.yaml up -d --build
             echo 'Deployment successful to digital ocean'
