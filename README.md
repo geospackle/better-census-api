@@ -1,5 +1,5 @@
 # better-census-api
-
+#
 ### API for easier access to U.S. Census data
 #### About the Project
 The purpose of Better Census API is to provide improved access to U.S. Census data. The Go application fetches data from the [official census API](https://api.census.gov),
