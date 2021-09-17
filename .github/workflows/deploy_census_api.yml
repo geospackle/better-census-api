@@ -8,9 +8,9 @@ jobs:
       - name: Deploy Go API
         uses: appleboy/ssh-action@v0.1.2
         with:
-          host: ${{secrets.SSH_HOST}}
+          host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_UNAME }}
-          key: ${{secrets.SSH_KEY}}
+          key: ${{ secrets.SSH_KEY }}
 
      
           script: |
