@@ -1,10 +1,12 @@
-name: Build & Deploy
+name: Rebuild
 on: [push]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
       - name: Deploy Census API
         uses: appleboy/ssh-action@v0.1.2
         with:
@@ -14,6 +16,8 @@ jobs:
 
      
           script:
-            git clone https://github.com/geospackle/better-census-api.git
-            docker-compose -f go-app-compose.yaml up -d --build
-            echo 'Deployment successful to digital ocean'
+            docker stop census-api
+            docker rm census-api
+            docker build . -t census-api
+            docker run --detach  -p 127.0.0.1:5000:5000/tcp --env "VIRTUAL_HOST=better-census-api.com" --env "LETSENCRYPT_HOST=better-census-api.com" --env "HTTPS_METHOD=noredirect" census-api
+            echo 'Docker was updated'
